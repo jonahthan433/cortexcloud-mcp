@@ -1,5 +1,5 @@
 {
-  "name": "@cortexcloud/mcp",
+  "name": "@cortexcloud.org/mcp",
   "version": "0.2.0",
   "description": "MCP server for CortexCloud — pay-per-call AI + data APIs via x402 (USDC on Base). No API keys, no subscriptions.",
   "type": "module",
