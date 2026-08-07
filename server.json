@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jonahthan433/cortexcloud",
+  "version": "0.2.0",
+  "title": "CortexCloud MCP",
+  "description": "Pay-per-call AI + on-chain data via x402. Free handshake; each call bills USDC on Base.",
+  "websiteUrl": "https://api.cortexcloud.org",
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/jonahthan433/cortexcloud-mcp",
+    "id": "1326375388"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.cortexcloud.org/mcp"
+    }
+  ]
+}
