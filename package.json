@@ -1,0 +1,42 @@
+{
+  "name": "@cortexcloud/mcp",
+  "version": "0.2.0",
+  "description": "MCP server for CortexCloud — pay-per-call AI + data APIs via x402 (USDC on Base). No API keys, no subscriptions.",
+  "type": "module",
+  "bin": {
+    "cortexcloud-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "mcp",
+    "x402",
+    "usdc",
+    "ai",
+    "agents",
+    "cortexcloud"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@x402/core": "^2.20.0",
+    "@x402/evm": "^2.20.0",
+    "@x402/extensions": "^2.20.0",
+    "@x402/fetch": "^2.20.0",
+    "viem": "^2.23.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

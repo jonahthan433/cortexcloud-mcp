@@ -1,0 +1,6 @@
+node_modules
+dist/*.map
+smoke.ts
+paid_test.mjs
+tsconfig.tsbuildinfo
+*.log
