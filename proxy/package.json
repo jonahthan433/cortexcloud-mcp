@@ -1,0 +1,44 @@
+{
+  "name": "@cortexcloud.org/proxy",
+  "version": "0.1.0",
+  "description": "Local OpenAI-compatible proxy that auto-pays CortexCloud's x402 endpoints in USDC on Base. Agents route any OpenAI client here; the proxy signs & settles x402 per call. No API key, no subscription.",
+  "type": "module",
+  "bin": {
+    "cortexcloud-proxy": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/cli.ts src/index.ts --bundle --platform=node --format=esm --packages=external --outdir=dist --target=node20",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "keywords": [
+    "cortexcloud",
+    "x402",
+    "openai",
+    "proxy",
+    "agent",
+    "usdc",
+    "base"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@x402/evm": "^2.20.0",
+    "@x402/fetch": "^2.20.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0"
+  }
+}

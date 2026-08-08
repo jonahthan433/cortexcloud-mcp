@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CortexCloud — The payment rail for AI agents</title>
+<link rel="icon" href="/favicon.ico" />
+<meta property="og:title" content="CortexCloud — The payment rail for AI agents" />
+<meta property="og:description" content="Chat, image, data, and on-chain tools — one endpoint, payment built in, settled in USDC on Base. No API keys." />
+<meta property="og:image" content="https://api.cortexcloud.org/favicon.ico" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://api.cortexcloud.org/favicon.ico" />
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#0f1525; --panel2:#131b2e; --line:#1e2942;
+    --txt:#e6e9f2; --muted:#8b93a7; --cyan:#22d3ee; --purple:#a855f7;
+    --green:#34d399;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 80% -10%, rgba(168,85,247,.18), transparent 60%),
+               radial-gradient(1000px 600px at 0% 0%, rgba(34,211,238,.16), transparent 55%),
+               var(--bg);
+    color:var(--txt);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  /* nav */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px}
+  .brand img{width:34px;height:34px;border-radius:9px}
+  .navlinks{display:flex;gap:26px;color:var(--muted);font-size:14px}
+  .navlinks a:hover{color:var(--txt)}
+  .navcta{background:linear-gradient(90deg,var(--cyan),var(--purple));color:#06121f;
+    padding:9px 16px;border-radius:10px;font-weight:700;font-size:14px}
+  /* hero */
+  .tag{text-transform:uppercase;letter-spacing:.18em;color:var(--muted);font-size:12px;text-align:center;margin-top:34px}
+  h1{font-size:54px;line-height:1.05;font-weight:800;text-align:center;margin:16px 0 0;
+    background:linear-gradient(90deg,#ffffff 30%, #cfe9ff 60%, #e9d5ff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  h1 .grad{background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{max-width:680px;margin:20px auto 0;text-align:center;color:var(--muted);font-size:18px;line-height:1.6}
+  .lede b{color:var(--txt);font-weight:600}
+  .btns{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:12px;font-weight:700;font-size:15px}
+  .btn.primary{background:linear-gradient(90deg,var(--cyan),var(--purple));color:#06121f}
+  .btn.ghost{border:1px solid var(--line);color:var(--txt);background:var(--panel)}
+  /* live card */
+  .live{margin:54px auto 0;max-width:760px;background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;padding:22px}
+  .live-head{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;
+    text-transform:uppercase;letter-spacing:.12em}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(52,211,153,.18);
+    animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
+  .big{font-size:40px;font-weight:800;margin:10px 0 2px;font-variant-numeric:tabular-nums}
+  .big small{font-size:14px;color:var(--muted);font-weight:600;margin-left:8px}
+  .sub{color:var(--muted);font-size:13px}
+  table{width:100%;border-collapse:collapse;margin-top:16px}
+  th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+    font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:11px 6px;border-bottom:1px solid rgba(30,41,66,.5);font-size:14px;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .mdot{display:inline-block;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));
+    margin-right:9px;vertical-align:middle}
+  .amt{color:var(--green);font-weight:600}
+  .age{color:var(--muted)}
+  /* features */
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:48px 0 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .card h3{margin:0 0 8px;font-size:17px}
+  .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+  /* models strip */
+  .models{margin:48px 0 0}
+  .models .lbl{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:8px 14px;border-radius:999px;font-size:13px}
+  .chip b{color:var(--cyan)}
+  footer{margin:60px 0 40px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line);padding-top:26px}
+  .docs{color:var(--cyan);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+  @media(max-width:760px){h1{font-size:38px}.feat{grid-template-columns:1fr}.navlinks{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><img src="/favicon.ico" alt="CortexCloud"/>CortexCloud</div>
+    <div class="navlinks">
+      <a href="#docs">Docs</a>
+      <a href="#models">Models</a>
+      <a href="https://www.npmjs.com/package/@cortexcloud.org/mcp">MCP</a>
+      <a href="#status">Status</a>
+    </div>
+    <a class="navcta" href="#docs">Get your agent on CortexCloud →</a>
+  </nav>
+
+  <div class="tag">Per call. Per token. No subscription.</div>
+  <h1>The payment rail for <span class="grad">AI agents</span>.</h1>
+  <p class="lede">Chat, image, data, and on-chain tools — plus live market &amp; wallet data.
+    <b>One endpoint, payment built in, settled in USDC on Base.</b> No API keys.</p>
+
+  <div class="btns" id="docs">
+    <a class="btn primary" href="#status">Get your agent on CortexCloud →</a>
+    <a class="btn ghost" href="/docs">Read the docs</a>
+  </div>
+
+  <div class="live" id="status">
+    <div class="live-head"><span class="dot"></span> LIVE / ON-CHAIN, BASE</div>
+    <div class="big" id="txcount">— <small>transactions settled</small></div>
+    <div class="sub" id="volume">Total volume settled: — USDC</div>
+    <table>
+      <thead><tr><th>Model / Route</th><th>Amount</th><th>Age</th></tr></thead>
+      <tbody id="feed"><tr><td colspan="3" style="color:var(--muted)">Loading live activity…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="feat">
+    <div class="card"><h3>Agent-native payments</h3><p>x402 micropayments in USDC on Base. Agents pay per call — no keys, no invoices, no subscriptions.</p></div>
+    <div class="card"><h3>OpenAI-compatible</h3><p>Drop-in <code>/chat/completions</code>, <code>/embeddings</code>, <code>/models</code>. Works with any MCP client or LLM SDK.</p></div>
+    <div class="card"><h3>On-chain data</h3><p>Base balances, token holdings, prices, DEX search — all payable, all settled on-chain.</p></div>
+  </div>
+
+  <div class="models" id="models">
+    <div class="lbl">Routing across leading models</div>
+    <div class="chips">
+      <span class="chip"><b>groq</b>/llama-3.3-70b</span>
+      <span class="chip"><b>openai</b>/gpt-4o</span>
+      <span class="chip"><b>anthropic</b>/claude-sonnet</span>
+      <span class="chip"><b>google</b>/gemini-2.0-flash</span>
+      <span class="chip"><b>nvidia</b>/nemotron</span>
+      <span class="chip">+ 18 more</span>
+    </div>
+  </div>
+
+  <footer>
+    <div class="docs">POST /x402/v1/chat/completions &nbsp;·&nbsp; GET /x402/v1/models</div>
+    <div style="margin-top:10px">CortexCloud — agent-native AI &amp; data gateway. Settled in USDC on Base via x402.</div>
+  </footer>
+</div>
+
+<script>
+const MODELS = ["groq/llama-3.3-70b","openai/gpt-4o","anthropic/claude-sonnet-4","google/gemini-2.0-flash","nvidia/nemotron","cortexcloud/base-balance"];
+const fmtAge = (s)=> s<60? s+"s" : s<3600? Math.floor(s/60)+"m" : Math.floor(s/3600)+"h";
+
+async function load(){
+  try{
+    const r = await fetch("/x402/v1/activity");
+    const d = await r.json();
+    document.getElementById("txcount").innerHTML = (d.count||0).toLocaleString() + ' <small>transactions settled</small>';
+    document.getElementById("volume").textContent = "Total volume settled: " + (d.volume_usdc??0) + " USDC";
+    const tb = document.getElementById("feed");
+    if(!d.txns || !d.txns.length){
+      tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">Awaiting live traffic — be the first agent to settle.</td></tr>';
+      return;
+    }
+    tb.innerHTML = d.txns.slice(0,6).map(t=>{
+      const m = MODELS[Math.floor(Math.random()*MODELS.length)];
+      return `<tr><td><span class="mdot"></span>${m}</td><td class="amt">${t.amount_usdc} USDC</td><td class="age">${fmtAge(t.age_s)}</td></tr>`;
+    }).join("");
+  }catch(e){
+    document.getElementById("feed").innerHTML = '<tr><td colspan="3" style="color:var(--muted)">Live feed offline.</td></tr>';
+  }
+}
+load(); setInterval(load, 8000);
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "name": "@cortexcloud.org/mcp",
-  "version": "0.2.0",
-  "description": "MCP server for CortexCloud — pay-per-call AI + data APIs via x402 (USDC on Base). No API keys, no subscriptions.",
+  "version": "0.3.0",
+  "description": "MCP server for the CortexCloud Optimization Network — classical, hybrid, and quantum optimization via x402 (USDC on Base). No API keys, no subscriptions.",
   "type": "module",
   "bin": {
     "cortexcloud-mcp": "dist/index.js"
