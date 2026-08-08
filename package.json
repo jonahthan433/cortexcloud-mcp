@@ -1,7 +1,7 @@
 {
   "name": "@cortexcloud.org/mcp",
   "version": "0.4.0",
-  "description": "MCP server for the CortexCloud Optimization Network — classical, hybrid, and quantum optimization via x402 (USDC on Base). No API keys, no subscriptions.",
+  "description": "CortexCloud MCP: pay-per-call QUBO/Ising optimization via x402 (USDC on Base).",
   "mcpName": "io.github.jonahthan433/cortexcloud",
   "repository": {
     "type": "git",

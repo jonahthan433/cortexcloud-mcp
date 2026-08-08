@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.jonahthan433/cortexcloud",
-  "description": "Pay-per-call QUBO/Ising optimization for AI agents via x402 (USDC on Base): estimate free, solve per run (classical $0.05, hybrid $0.10, quantum $0.85). No API keys, no subscriptions. Remote Streamable HTTP at https://api.cortexcloud.org/mcp.",
+  "description": "Pay-per-call QUBO/Ising optimization for AI agents via x402 (USDC on Base). No API keys.",
   "repository": {
     "url": "https://github.com/jonahthan433/cortexcloud-mcp",
     "source": "github"
