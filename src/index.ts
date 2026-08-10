@@ -79,7 +79,7 @@ export function createServer(): McpServer {
   const server = new McpServer({ name: 'cortexcloud', version: '0.4.0' });
 
   server.registerTool('cortex_estimate_optimization', {
-    description: 'Analyze an optimization problem for free — returns a decision block: recommended mode/backend, estimated provider cost, USDC price, benchmark evidence. Always call this before paying for cortex_optimize.',
+    description: 'Analyze an optimization problem for free — returns a machine-readable decision block: recommended mode/backend, estimated runtime, USDC price, benchmark evidence. Always call this before paying for cortex_optimize.',
     inputSchema: {
       problem: problemSchema.describe('Optimization problem to analyze'),
     },
@@ -88,7 +88,7 @@ export function createServer(): McpServer {
   }));
 
   server.registerTool('cortex_optimize', {
-    description: 'Solve a QUBO/Ising optimization problem (x402-paid, USDC on Base). Returns a job_id to poll with cortex_get_job. Prices per run: classical $0.05, hybrid $0.10, quantum $0.85 (charged = max(list, provider cost x 2.0)). Use mode=auto unless you specifically need quantum.',
+    description: 'Solve a QUBO/Ising optimization problem (x402-paid, USDC on Base). Returns a job_id to poll with cortex_get_job. Prices per successful run: classical $0.05, hybrid $0.10, quantum $1.503 (exact price quoted by POST /v1/estimate before payment). Use mode=auto unless you specifically need quantum.',
     inputSchema: {
       mode: z.enum(['auto', 'classical', 'hybrid', 'quantum']).optional().describe('Defaults to auto (fastest proven backend)'),
       problem: problemSchema.describe('Problem to solve'),
@@ -107,7 +107,7 @@ export function createServer(): McpServer {
   }));
 
   server.registerTool('cortex_list_backends', {
-    description: 'List solver backends (classical/hybrid/quantum) with availability, per-backend estimated provider cost, effective price, and sellable flag. Free — check this before choosing a quantum backend.',
+    description: 'List solver backends (classical/hybrid/quantum) with live availability and verified flag. Free — check before choosing a mode.',
     inputSchema: {},
   }, async () => ({
     content: [{ type: 'text', text: await call('/v1/backends') }],
