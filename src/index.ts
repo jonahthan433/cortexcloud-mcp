@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * CortexCloud MCP server — optimization infrastructure for AI agents.
+ * CortexCloud MCP server — agent-native x402 pay-per-call API platform.
  *
  * Tools wrap the CortexCloud Optimization Network REST surface 1:1:
  *   cortex_estimate_optimization (free)  POST  /v1/estimate
@@ -33,22 +33,22 @@ import { pathToFileURL } from 'node:url';
 
 const BASE = (process.env.CORTEXCLOUD_BASE ?? 'https://api.cortexcloud.org').replace(/\/$/, '');
 const key = process.env.EVM_PRIVATE_KEY;
-if (!key) {
-  console.error('EVM_PRIVATE_KEY required — the wallet that pays USDC for API calls.');
-  process.exit(1);
-}
-const account = privateKeyToAccount(key as `0x${string}`);
 
-// Default x402 selector picks accepts[0] (the primary wallet). Prefer the
-// second wallet when it's advertised, so sweep/agent traffic lands there.
+// Agent-native: the SERVER must not pay. If no payer key is configured, paid
+// tools surface the 402 challenge to the caller so the AGENT's own x402 client
+// settles (consistent with REST/SDK). Only an operator who WANTS to pre-pay
+// (e.g. a self-hosted agent) sets EVM_PRIVATE_KEY — that key is then the
+// agent's, not CortexCloud's.
+const account = key ? privateKeyToAccount(key as `0x${string}`) : null;
 const TARGET_WALLET = (process.env.CORTEXCLOUD_PAYTO ?? '0x5a0353bc9c75b893a9b5735d3e79f1bd988ea143').toLowerCase();
-const client = new x402Client((_v, accepts) => {
-  const hit = accepts.find((a) => a.payTo?.toLowerCase() === TARGET_WALLET);
-  return hit ?? accepts[0];
-})
-  .register('eip155:8453', new ExactEvmScheme(account, { rpcUrl: process.env.EVM_RPC_URL ?? 'https://mainnet.base.org' }))
-  .registerExtension(new BuilderCodeClientExtension(process.env.BUILDER_CODE ?? 'bc_cortexcloud'));
-const fetchWithPay = wrapFetchWithPayment(fetch, client);
+const fetchWithPay = account
+  ? wrapFetchWithPayment(fetch, new x402Client((_v, accepts) => {
+      const hit = accepts.find((a) => a.payTo?.toLowerCase() === TARGET_WALLET);
+      return hit ?? accepts[0];
+    })
+      .register('eip155:8453', new ExactEvmScheme(account, { rpcUrl: process.env.EVM_RPC_URL ?? 'https://mainnet.base.org' }))
+      .registerExtension(new BuilderCodeClientExtension(process.env.BUILDER_CODE ?? 'bc_cortexcloud')))
+  : fetch;  // ponytail: no signer -> 402 passes through to caller, agent pays
 
 async function call(path: string, body?: Record<string, unknown>): Promise<string> {
   try {
