@@ -1,7 +1,7 @@
 {
   "name": "@cortexcloud.org/mcp",
   "version": "0.4.0",
-  "description": "CortexCloud MCP: pay-per-call QUBO/Ising optimization via x402 (USDC on Base).",
+  "description": "CortexCloud MCP: agent-native x402 pay-per-call API — Automation, Data, Research, AI, Optimization/Quantum. USDC on Base, no API keys.",
   "mcpName": "io.github.jonahthan433/cortexcloud",
   "repository": {
     "type": "git",
