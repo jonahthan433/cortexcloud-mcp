@@ -1,126 +1,76 @@
 #!/usr/bin/env node
 /**
- * CortexCloud MCP server — agent-native x402 pay-per-call API platform.
+ * @cortexcloud.org/mcp — stdio bridge to the hosted CortexCloud MCP server.
  *
- * Tools wrap the CortexCloud Optimization Network REST surface 1:1:
- *   cortex_estimate_optimization (free)  POST  /v1/estimate
- *   cortex_optimize              (x402)  POST  /v1/optimize
- *   cortex_get_job               (free)  GET   /v1/jobs/{job_id}
- *   cortex_list_backends         (free)  GET   /v1/backends
+ * The hosted server at https://api.cortexcloud.org/mcp is the single source of
+ * truth for tools, schemas and prices, so this package never duplicates (and
+ * never drifts from) the tool surface. It exists for MCP clients that can only
+ * speak stdio and cannot connect to a remote HTTP endpoint directly.
  *
- * The paid tool triggers the x402 flow automatically via @x402/fetch:
- * 402 challenge -> sign payment authorization -> facilitator settles USDC on
- * Base from the operator's wallet -> request retried with payment header.
+ *   [stdio client]  <--MCP-->  this bridge  <--Streamable HTTP-->  api.cortexcloud.org/mcp
+ *
+ * Free tools work out of the box. Paid tool calls return the x402 challenge
+ * inside the tool result — the agent sees the price, payee, asset and network
+ * before anything is signed. Clients that can attach a payment header can
+ * forward one with CORTEXCLOUD_PAYMENT_SIGNATURE.
  *
  * Env:
- *   EVM_PRIVATE_KEY  (required) viem 0x-prefixed private key of the paying wallet
- *   EVM_RPC_URL      (optional) default https://mainnet.base.org
- *   CORTEXCLOUD_BASE (optional) default https://api.cortexcloud.org
- *   BUILDER_CODE     (optional) default bc_cortexcloud (attribution code)
- *
- * Dual transport: run as the bin (stdio) for local Claude Desktop / Cursor, or
- * import createServer() and host it over Streamable HTTP (src/http.ts).
+ *   CORTEXCLOUD_BASE               default https://api.cortexcloud.org
+ *   CORTEXCLOUD_PAYMENT_SIGNATURE  optional x402 payment header to forward
  */
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
-import { wrapFetchWithPayment } from '@x402/fetch';
-import { x402Client } from '@x402/core/client';
-import { ExactEvmScheme } from '@x402/evm';
-import { BuilderCodeClientExtension } from '@x402/extensions';
-import { privateKeyToAccount } from 'viem/accounts';
-import { pathToFileURL } from 'node:url';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 
+const VERSION = '0.5.0';
 const BASE = (process.env.CORTEXCLOUD_BASE ?? 'https://api.cortexcloud.org').replace(/\/$/, '');
-const key = process.env.EVM_PRIVATE_KEY;
+const ENDPOINT = new URL('/mcp', BASE);
 
-// Agent-native: the SERVER must not pay. If no payer key is configured, paid
-// tools surface the 402 challenge to the caller so the AGENT's own x402 client
-// settles (consistent with REST/SDK). Only an operator who WANTS to pre-pay
-// (e.g. a self-hosted agent) sets EVM_PRIVATE_KEY — that key is then the
-// agent's, not CortexCloud's.
-const account = key ? privateKeyToAccount(key as `0x${string}`) : null;
-const TARGET_WALLET = (process.env.CORTEXCLOUD_PAYTO ?? '0x5a0353bc9c75b893a9b5735d3e79f1bd988ea143').toLowerCase();
-const fetchWithPay = account
-  ? wrapFetchWithPayment(fetch, new x402Client((_v, accepts) => {
-      const hit = accepts.find((a) => a.payTo?.toLowerCase() === TARGET_WALLET);
-      return hit ?? accepts[0];
-    })
-      .register('eip155:8453', new ExactEvmScheme(account, { rpcUrl: process.env.EVM_RPC_URL ?? 'https://mainnet.base.org' }))
-      .registerExtension(new BuilderCodeClientExtension(process.env.BUILDER_CODE ?? 'bc_cortexcloud')))
-  : fetch;  // ponytail: no signer -> 402 passes through to caller, agent pays
+const headers: Record<string, string> = {};
+const signature = process.env.CORTEXCLOUD_PAYMENT_SIGNATURE;
+if (signature) headers['payment-signature'] = signature;
 
-async function call(path: string, body?: Record<string, unknown>): Promise<string> {
-  try {
-    const res = await fetchWithPay(BASE + path, {
-      method: body === undefined ? 'GET' : 'POST',
-      headers: body === undefined ? undefined : { 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (!res.ok) return `HTTP ${res.status}: ${text.slice(0, 2000)}`;
-    return text;
-  } catch (e) {
-    return `ERROR: ${(e as Error).message}`;
-  }
+const upstream = new Client(
+  { name: 'cortexcloud-bridge', version: VERSION },
+  { capabilities: {} },
+);
+
+async function main(): Promise<void> {
+  await upstream.connect(
+    new StreamableHTTPClientTransport(ENDPOINT, { requestInit: { headers } }),
+  );
+
+  const server = new Server(
+    { name: 'cortexcloud', version: VERSION },
+    { capabilities: { tools: {} } },
+  );
+
+  // Tool list is served by the upstream, never cached here: a route or price
+  // change ships on the server and every client sees it on the next call.
+  server.setRequestHandler(ListToolsRequestSchema, async () => upstream.listTools());
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      return await upstream.callTool(request.params);
+    } catch (e) {
+      return {
+        content: [{ type: 'text', text: `CortexCloud bridge error: ${(e as Error).message}` }],
+        isError: true,
+      };
+    }
+  });
+
+  await server.connect(new StdioServerTransport());
+  // stderr only: stdout is the MCP wire.
+  process.stderr.write(`cortexcloud-mcp ${VERSION} -> ${ENDPOINT.href}\n`);
 }
 
-// Shared problem schema — mirrors /v1/estimate's ProblemInput (QUBO/Ising).
-const problemSchema = z.object({
-  problem_type: z.enum(['qubo', 'ising']).optional().describe('Defaults to qubo'),
-  n: z.number().int().min(2).max(5000).describe('Number of binary variables'),
-  data: z.object({
-    linear: z.array(z.number()).optional().describe('Linear coefficients q_ii'),
-    quadratic: z.record(z.number()).optional().describe('Sparse quadratic coefficients Q{i,j}'),
-  }).describe('Problem data — either linear/quadratic (qubo) or h/J fields (ising)'),
+main().catch((e) => {
+  process.stderr.write(`cortexcloud-mcp failed to start: ${(e as Error).message}\n`);
+  process.exit(1);
 });
-
-export function createServer(): McpServer {
-  const server = new McpServer({ name: 'cortexcloud', version: '0.4.0' });
-
-  server.registerTool('cortex_estimate_optimization', {
-    description: 'Analyze an optimization problem for free — returns a machine-readable decision block: recommended mode/backend, estimated runtime, USDC price, benchmark evidence. Always call this before paying for cortex_optimize.',
-    inputSchema: {
-      problem: problemSchema.describe('Optimization problem to analyze'),
-    },
-  }, async ({ problem }) => ({
-    content: [{ type: 'text', text: await call('/v1/estimate', problem) }],
-  }));
-
-  server.registerTool('cortex_optimize', {
-    description: 'Solve a QUBO/Ising optimization problem (x402-paid, USDC on Base). Returns a job_id to poll with cortex_get_job. Prices per successful run: classical $0.05, hybrid $0.10, quantum $1.503 (exact price quoted by POST /v1/estimate before payment). Use mode=auto unless you specifically need quantum.',
-    inputSchema: {
-      mode: z.enum(['auto', 'classical', 'hybrid', 'quantum']).optional().describe('Defaults to auto (fastest proven backend)'),
-      problem: problemSchema.describe('Problem to solve'),
-    },
-  }, async ({ mode, problem }) => ({
-    content: [{ type: 'text', text: await call('/v1/optimize', { mode: mode ?? 'auto', problem }) }],
-  }));
-
-  server.registerTool('cortex_get_job', {
-    description: 'Poll an optimization job by id. Free — returns status, solution, objective, error.',
-    inputSchema: {
-      job_id: z.string().describe('Job id from cortex_optimize'),
-    },
-  }, async ({ job_id }) => ({
-    content: [{ type: 'text', text: await call(`/v1/jobs/${encodeURIComponent(job_id)}`) }],
-  }));
-
-  server.registerTool('cortex_list_backends', {
-    description: 'List solver backends (classical/hybrid/quantum) with live availability and verified flag. Free — check before choosing a mode.',
-    inputSchema: {},
-  }, async () => ({
-    content: [{ type: 'text', text: await call('/v1/backends') }],
-  }));
-
-  return server;
-}
-
-// Run stdio when executed directly (cortexcloud-mcp bin / Claude Desktop).
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  (async () => {
-    const server = createServer();
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-  })();
-}
